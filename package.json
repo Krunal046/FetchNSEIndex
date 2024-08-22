@@ -1,0 +1,17 @@
+{
+  "name": "index_fetch",
+  "version": "1.0.0",
+  "description": "this project will fetch real time data for indieces ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Krunal L Soni",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.4",
+    "cheerio": "^1.0.0",
+    "express": "^4.19.2",
+    "firebase-admin": "^12.3.1"
+  }
+}

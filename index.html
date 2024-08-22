@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Start Fetching</title>
+  <script>
+    async function startFetching() {
+      try {
+        const response = await fetch('/start-fetching');
+        const data = await response.text();
+        alert(data);
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to start fetching data.');
+      }
+    }
+
+    async function stopFetching() {
+      try {
+        const response = await fetch('/stop-fetching');
+        const data = await response.text();
+        alert(data);
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to stop fetching data.');
+      }
+    }
+  </script>
+</head>
+<body>
+  <h1>Start Fetching Data</h1>
+  <button onclick="startFetching()">Start Fetching</button>
+  <button onclick="stopFetching()">Stop Fetching</button>
+</body>
+</html>
