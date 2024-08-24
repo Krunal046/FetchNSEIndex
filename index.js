@@ -102,6 +102,25 @@ app.get('/stop-fetching', (req, res) => {
   }
 });
 
+// Auto-refresh logic
+let autoRefreshInterval;
+
+const autoRefresh = () => {
+  autoRefreshInterval = setInterval(async () => {
+    try {
+      if (!fetchInterval) {
+        await axios.get(`http://localhost:${port}/start-fetching`);
+        console.log('Automatically restarted fetching data.');
+      }
+    } catch (error) {
+      console.error('Error auto-refreshing the fetch process:', error.message);
+    }
+  }, 600000); // 10 minutes
+};
+
+// Start the auto-refresh function
+autoRefresh();
+
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
