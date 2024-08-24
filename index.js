@@ -2,9 +2,11 @@ const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const admin = require('firebase-admin');
+const os = require('os');
+const cluster = require('cluster');
 
 // Firebase Admin initialization
-const serviceAccount = require('./fir-e27d0-firebase-adminsdk-893r8-1e18d90645.json');  // Ensure this path is correct
+const serviceAccount = require('./fir-e27d0-firebase-adminsdk-893r8-1e18d90645.json'); // Ensure this path is correct
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -13,7 +15,7 @@ admin.initializeApp({
 
 const db = admin.database();
 const app = express();
-const port = 3000;
+const PORT = process.env.PORT || 3000; // Use the PORT environment variable provided by Render or default to 3000
 
 // Serve static files from the 'public' folder
 app.use(express.static('public'));
@@ -39,19 +41,19 @@ const fetchDataForIndex = async (index) => {
     const response = await axios.get(url);
     const html = response.data;
     const $ = cheerio.load(html);
-    
+
     const divText = $("div.YMlKec.fxKbKc").text();
-    
+
     if (divText) {
       console.log(`${index}: ${divText}`);
-      
+
       const data = {
         LivePrice: divText,
         TTS: false,
         alarm: "",
-        oldPrice: "" 
+        oldPrice: ""
       };
-      
+
       const indexName = index.replace('_', ' ');
       await db.ref(`indices/${indexName}`).set(data);
     } else {
@@ -109,7 +111,7 @@ const autoRefresh = () => {
   autoRefreshInterval = setInterval(async () => {
     try {
       if (!fetchInterval) {
-        await axios.get(`http://localhost:${port}/start-fetching`);
+        await axios.get(`http://localhost:${PORT}/start-fetching`);
         console.log('Automatically restarted fetching data.');
       }
     } catch (error) {
@@ -121,6 +123,28 @@ const autoRefresh = () => {
 // Start the auto-refresh function
 autoRefresh();
 
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-});
+// Cluster setup to handle multiple worker processes if needed
+if (cluster.isMaster) {
+  const numWorkers = os.cpus().length;
+  console.log(`Master process is running with PID: ${process.pid}`);
+  console.log(`Forking ${numWorkers} workers...`);
+
+  for (let i = 0; i < numWorkers; i++) {
+    cluster.fork();
+  }
+
+  cluster.on('exit', (worker, code, signal) => {
+    console.log(`Worker ${worker.process.pid} exited with code: ${code}, signal: ${signal}`);
+    console.log('Starting a new worker...');
+    cluster.fork(); // Start a new worker if one exits
+  });
+} else {
+  // Worker processes have their own server
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Worker ${process.pid} running on port ${PORT}`);
+  });
+
+  // Increase server timeout settings
+  server.keepAliveTimeout = 120000; // 120 seconds
+  server.headersTimeout = 120000; // 120 seconds
+}
