@@ -86,7 +86,7 @@ app.get('/', (req, res) => {
 // Route to start fetching data
 app.get('/start-fetching', (req, res) => {
   if (!fetchInterval) {
-    fetchInterval = setInterval(startFetching, 1000);
+    fetchInterval = setInterval(startFetching, 5000); // Fetch every 5 seconds to reduce load
     res.send('Started fetching data.');
   } else {
     res.send('Fetching data is already running.');
@@ -145,6 +145,6 @@ if (cluster.isMaster) {
   });
 
   // Increase server timeout settings
-  server.keepAliveTimeout = 120000; // 120 seconds
-  server.headersTimeout = 120000; // 120 seconds
+  server.keepAliveTimeout = 300000; // 300 seconds
+  server.headersTimeout = 310000; // Slightly more than keepAliveTimeout
 }
